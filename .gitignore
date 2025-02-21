@@ -1,0 +1,12 @@
+# Ignore Python cache and virtual environment
+__pycache__/
+*.pyc
+venv/
+env/
+
+# Ignore model files (if not using Git LFS)
+models/
+!models/best2155e.pt
+
+# Ignore uploaded images
+static/uploads/

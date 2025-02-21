@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bone Fracture Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        input[type="submit"] {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="submit"]:hover {
+            background-color: #2980b9;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        #result img, #preview-container img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        #preview-container {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+        #image-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        @media (min-width: 768px) {
+            #image-comparison {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            #image-comparison > div {
+                width: 48%;
+            }
+        }
+        .image-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .image-card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        #analyze-btn {
+            display: none;
+            margin: 20px auto;
+            padding: 12px 24px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #analyze-btn:hover {
+            background-color: #219653;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bone Fracture Detection</h1>
+    <p>Upload an X-ray image to detect if there are any fractures present.</p>
+    
+    <form id="upload-form">
+        <input type="file" id="file-input" name="file" accept="image/*" required>
+        <input type="submit" value="Upload Image">
+    </form>
+    
+    <div id="preview-container">
+        <h2>Preview Your X-ray Image</h2>
+        <div class="image-card">
+            <img id="preview-image" src="" alt="Uploaded X-ray preview">
+        </div>
+        <button id="analyze-btn">Analyze Image</button>
+    </div>
+    
+    <div class="loading" id="loading">
+        Analyzing image... Please wait.
+    </div>
+    
+    <div id="result"></div>
+    
+    <script>
+        // Preview uploaded image
+        document.getElementById('file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview-image').src = e.target.result;
+                    document.getElementById('preview-container').style.display = 'block';
+                    document.getElementById('analyze-btn').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Handle form submission for just uploading
+        document.getElementById('upload-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('file-input');
+            if (fileInput.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview-image').src = e.target.result;
+                    document.getElementById('preview-container').style.display = 'block';
+                    document.getElementById('analyze-btn').style.display = 'block';
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        });
+        
+        // Handle analyze button click
+        document.getElementById('analyze-btn').addEventListener('click', function() {
+            // Show loading message
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').innerHTML = '';
+            
+            const formData = new FormData(document.getElementById('upload-form'));
+            
+            fetch('/detect', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading message
+                document.getElementById('loading').style.display = 'none';
+                
+                const resultDiv = document.getElementById('result');
+                if (data.error) {
+                    resultDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                } else if (data.image) {
+                    resultDiv.innerHTML = `
+                        <h2 style="color: #e74c3c;">${data.result}</h2>
+                        <div id="image-comparison">
+                            <div class="image-card">
+                                <h3>Original Image</h3>
+                                <img src="${document.getElementById('preview-image').src}" alt="Original X-ray Image">
+                            </div>
+                            <div class="image-card">
+                                <h3>Analysis Result</h3>
+                                <img src="data:image/jpeg;base64,${data.image}" alt="Processed X-ray Image">
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h2 style="color: #27ae60;">${data.result}</h2>
+                        <div class="image-card">
+                            <h3>Original Image</h3>
+                            <img src="${document.getElementById('preview-image').src}" alt="Original X-ray Image">
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                // Hide loading message
+                document.getElementById('loading').style.display = 'none';
+                
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = '<p style="color: red;">An error occurred during processing. Please try again.</p>';
+            });
+        });
+    </script>
+</body>
+</html>
