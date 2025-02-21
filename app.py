@@ -12,7 +12,7 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 # Load the YOLOv8 model
-model = YOLO('best2155e.pt')
+model = YOLO('models/best2155e.pt')
 
 # Function to check allowed file extensions
 def allowed_file(filename):
