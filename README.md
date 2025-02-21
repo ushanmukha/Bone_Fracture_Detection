@@ -1,5 +1,5 @@
-BONE FRACTURE DETECTION USING YOLO11
+Bone Fracture Detection Using Yolov11
 
 ##License
 
-contact -- Shanmukha Reddy
+Contact -- Shanmukha Reddy
