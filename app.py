@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-# Load the YOLOv8 model
+# Load the YOLOv11 model
 model = YOLO('models/best2155e.pt')
 
 # Function to check allowed file extensions
@@ -36,7 +36,7 @@ def detect():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         
-        # Run detection with YOLOv8
+        # Run detection with YOLOv11
         results = model(filepath)
         
         if len(results[0].boxes) == 0:
